@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#173fd4">
+  <meta name="description" content="큰 글씨로 보는 쉬운 환율 계산기. 외화를 원화로 반올림하고 한글 단위로 읽어보세요.">
+  <title>큼직 환율 · 한국 돈으로 얼마?</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23173fd4'/%3E%3Ctext x='32' y='45' text-anchor='middle' font-size='42' fill='white'%3E₩%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="./style.css"><script src="./app.js" defer></script>
+</head>
+<body>
+<main>
+  <header><a class="brand" href="./"><span class="mark" aria-hidden="true">₩</span> 큼직 환율</a><span class="tag">쉽게 보고, 쉽게 계산</span></header>
+  <h1>한국 돈으로<br>얼마일까요?</h1>
+  <section class="calculator" aria-label="환율 계산기">
+    <div class="entry">
+      <label for="currency">어느 나라 돈인가요?</label>
+      <select id="currency">
+        <option value="EUR">유럽 · 유로 EUR</option><option value="USD">미국 · 달러 USD</option><option value="JPY">일본 · 엔 JPY</option><option value="TRY">튀르키예 · 리라 TRY</option><option value="CNY">중국 · 위안 CNY</option><option value="GBP">영국 · 파운드 GBP</option><option value="VND">베트남 · 동 VND</option><option value="THB">태국 · 바트 THB</option><option value="TWD">대만 · 달러 TWD</option><option value="HKD">홍콩 · 달러 HKD</option><option value="SGD">싱가포르 · 달러 SGD</option><option value="AUD">호주 · 달러 AUD</option><option value="CAD">캐나다 · 달러 CAD</option><option value="CHF">스위스 · 프랑 CHF</option><option value="PHP">필리핀 · 페소 PHP</option>
+      </select>
+      <div class="rate-editor">
+        <label for="manual-rate" id="rate-label">1유로 환율 (원)</label>
+        <input id="manual-rate" type="text" inputmode="decimal" value="1555.99" autocomplete="off" aria-describedby="rate-help rate-error">
+        <p id="rate-help">알고 계신 환율을 입력해 주세요.</p>
+        <p id="rate-error" class="error" role="alert"></p>
+        <p id="applied-rate" role="status"></p>
+      </div>
+      <div class="amount-label"><label for="amount">금액을 입력하세요</label></div>
+      <div class="amount-wrap"><input id="amount" type="text" inputmode="decimal" value="" placeholder="0" autocomplete="off" spellcheck="false" aria-describedby="input-error"><span id="unit">유로</span></div>
+      <p id="input-error" class="error" role="alert"></p>
+      <div class="increments" aria-label="금액 더하기"><button type="button" data-add="10">+10</button><button type="button" data-add="100">+100</button><button type="button" data-add="1000">+1,000</button></div>
+    </div>
+    <div class="result-panel" aria-live="polite" aria-atomic="true">
+      <div class="result-label">한국 돈으로</div>
+      <div class="result"><output id="result">—</output><span>원</span></div>
+      <p id="words" class="words">금액을 입력해 주세요</p>
+      <p class="rounding">소수점 없이, 원 단위로 반올림해요</p>
+    </div>
+  </section>
+  <button type="button" id="reset" class="reset-button">다시 계산하기</button>
+  <p class="reset-help">금액과 결과를 지워요. 선택한 통화와 환율은 유지돼요.</p>
+  <footer>입력한 환율을 올림해서 계산하는 간편 계산기예요.<br>처음 표시된 환율은 예시이며, 필요할 때 직접 바꿔 주세요.<br>실제 환전 금액은 은행 환율과 수수료에 따라 달라질 수 있어요.</footer>
+</main>
+</body></html>
