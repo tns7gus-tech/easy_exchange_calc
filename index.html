@@ -21,6 +21,7 @@
       <div class="rate-editor">
         <label for="manual-rate" id="rate-label">1유로 환율 (원)</label>
         <input id="manual-rate" type="text" inputmode="decimal" value="1555.99" autocomplete="off" aria-describedby="rate-help rate-error">
+        <p id="rate-status" role="status">최신 환율을 확인하는 중입니다.</p>
         <p id="rate-help">알고 계신 환율을 입력해 주세요.</p>
         <p id="rate-error" class="error" role="alert"></p>
         <p id="applied-rate" role="status"></p>
@@ -39,6 +40,6 @@
   </section>
   <button type="button" id="reset" class="reset-button">다시 계산하기</button>
   <p class="reset-help">금액과 결과를 지워요. 선택한 통화와 환율은 유지돼요.</p>
-  <footer>입력한 환율을 올림해서 계산하는 간편 계산기예요.<br>처음 표시된 환율은 예시이며, 필요할 때 직접 바꿔 주세요.<br>실제 환전 금액은 은행 환율과 수수료에 따라 달라질 수 있어요.</footer>
+  <footer>접속할 때와 한국시간 매일 00:00에 <a href="https://frankfurter.dev/" target="_blank" rel="noopener noreferrer">Frankfurter</a>의 최신 공개 환율을 확인해요. 제공처의 자료 기준일은 화면에 표시됩니다.<br>환율 조회에 실패하면 예시값이나 이전에 표시된 값을 사용할 수 있으니 기준일을 확인해 주세요.<br>입력한 환율을 올림해서 계산하며, 실제 환전 금액은 은행 환율과 수수료에 따라 달라질 수 있어요.</footer>
 </main>
 </body></html>
