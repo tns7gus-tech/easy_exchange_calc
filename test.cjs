@@ -20,3 +20,20 @@ assert.equal(convert(200,1366.70),274000);
 assert.equal(convert(200,27.98),5600);
 for(const value of ['',0,-1,'abc']) assert.throws(()=>simpleRate(value));
 console.log('Simplified rates and 100-yen basis passed.');
+
+const {kstDate, untilKstMidnight, exchangeRatesFromApi} = require('./app.js');
+assert.equal(kstDate(Date.parse('2026-09-24T14:59:59Z')), '2026-09-24');
+assert.equal(kstDate(Date.parse('2026-09-24T15:00:00Z')), '2026-09-25');
+assert.equal(untilKstMidnight(Date.parse('2026-09-24T14:59:59Z')), 1000);
+const live = exchangeRatesFromApi([
+  {date:'2026-09-24',base:'EUR',quote:'KRW',rate:1560},
+  {date:'2026-09-24',base:'EUR',quote:'USD',rate:1.2},
+  {date:'2026-09-23',base:'EUR',quote:'JPY',rate:180},
+  {date:'2026-09-24',base:'EUR',quote:'VND',rate:30000}
+]);
+assert.deepEqual(live.EUR,{value:'1560.00',date:'2026-09-24'});
+assert.deepEqual(live.USD,{value:'1300.00',date:'2026-09-24'});
+assert.deepEqual(live.JPY,{value:'866.67',date:'2026-09-23'});
+assert.deepEqual(live.VND,{value:'5.20',date:'2026-09-24'});
+assert.throws(() => exchangeRatesFromApi([{date:'2026-09-24',base:'EUR',quote:'USD',rate:1.2}]));
+console.log('Korean midnight and live-rate conversion passed.');
