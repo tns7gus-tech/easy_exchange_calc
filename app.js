@@ -35,12 +35,81 @@ function simpleRate(value) {
 function convert(amount, rawRate, basis = 1) {
   return Math.round(amount * simpleRate(rawRate) / basis);
 }
-if (typeof module !== 'undefined') module.exports = {koreanWon, parseAmount, simpleRate, convert};
+const CURRENCIES = ['EUR','USD','JPY','TRY','CNY','GBP','VND','THB','TWD','HKD','SGD','AUD','CAD','CHF','PHP'];
+const RATE_API = 'https://api.frankfurter.dev/v2/rates?base=EUR&quotes=' + ['KRW', ...CURRENCIES.filter(code => code !== 'EUR')].join(',');
+function kstDate(now = Date.now()) {
+  return new Date(now + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
+}
+function untilKstMidnight(now = Date.now()) {
+  return 86400000 - (now + 9 * 60 * 60 * 1000) % 86400000;
+}
+function exchangeRatesFromApi(rows) {
+  if (!Array.isArray(rows)) throw new Error('환율 데이터 형식이 올바르지 않아요.');
+  const byQuote = new Map();
+  for (const row of rows) {
+    if (row.base === 'EUR' && typeof row.quote === 'string' &&
+        Number.isFinite(row.rate) && row.rate > 0 && /^\d{4}-\d{2}-\d{2}$/.test(row.date)) {
+      byQuote.set(row.quote.toUpperCase(), row);
+    }
+  }
+  const won = byQuote.get('KRW');
+  if (!won) throw new Error('원화 환율을 찾지 못했어요.');
+  const result = {};
+  for (const code of CURRENCIES) {
+    const quote = code === 'EUR' ? {rate:1, date:won.date} : byQuote.get(code);
+    if (!quote) continue;
+    const basis = code === 'JPY' || code === 'VND' ? 100 : 1;
+    const rate = won.rate / quote.rate * basis;
+    if (!Number.isFinite(rate) || rate <= 0 || rate > 1000000) continue;
+    result[code] = {value:rate.toFixed(2), date:won.date < quote.date ? won.date : quote.date};
+  }
+  if (!Object.keys(result).length) throw new Error('사용할 수 있는 환율이 없어요.');
+  return result;
+}
+if (typeof module !== 'undefined') module.exports = {koreanWon, parseAmount, simpleRate, convert, kstDate, untilKstMidnight, exchangeRatesFromApi};
 if (typeof document !== 'undefined') {
   const $ = id => document.getElementById(id);
   const names = {EUR:'유로',USD:'달러',JPY:'엔',TRY:'리라',CNY:'위안',GBP:'파운드',VND:'동',THB:'바트',TWD:'달러',HKD:'달러',SGD:'달러',AUD:'달러',CAD:'달러',CHF:'프랑',PHP:'페소'};
   const rates = {EUR:'1555.99',USD:'1366.70',JPY:'863.44',TRY:'27.98'};
+  const rateMeta = {};
+  const manualOverrides = new Set();
+  let lastRefreshDay = '';
+  let pendingRefresh = null;
+  let fetchFailed = false;
+  let midnightTimer;
   const basisFor = currency => ['JPY','VND'].includes(currency) ? 100 : 1;
+  function loadCachedRates() {
+    try {
+      const saved = JSON.parse(localStorage.getItem('easyExchangeRates') || '{}');
+      for (const code of CURRENCIES) {
+        const item = saved[code];
+        if (item && /^\d{4}-\d{2}-\d{2}$/.test(item.date) &&
+            typeof item.value === 'string' && Number(item.value) > 0 && Number(item.value) <= 1000000) {
+          rates[code] = item.value;
+          rateMeta[code] = {date:item.date};
+        }
+      }
+    } catch { /* Private browsing may block local storage. */ }
+  }
+  function showRateStatus() {
+    const code = $('currency').value;
+    const meta = rateMeta[code];
+    if (manualOverrides.has(code)) {
+      $('rate-status').textContent = '직접 입력한 환율이에요. 다음 날 00:00(한국시간)에 자동 환율을 다시 확인해요.';
+    } else if (fetchFailed) {
+      $('rate-status').textContent = meta
+        ? '새 환율을 가져오지 못했어요. 자료 기준일 ' + meta.date + '의 환율을 사용 중입니다.'
+        : '환율을 가져오지 못했어요. 표시된 값은 예시이거나 직접 입력한 환율입니다.';
+    } else if (meta) {
+      $('rate-status').textContent = '자동 환율 · 자료 기준일 ' + meta.date + ' · 한국시간 매일 00:00 확인';
+    } else if (lastRefreshDay) {
+      $('rate-status').textContent = '선택한 통화의 자동 환율을 찾지 못했어요. 직접 입력해 주세요.';
+    } else if (rates[code]) {
+      $('rate-status').textContent = '예시 환율이에요. 최신 환율을 확인하는 중입니다.';
+    } else {
+      $('rate-status').textContent = '최신 환율을 확인하는 중입니다.';
+    }
+  }
   function calculate() {
     $('input-error').textContent = '';
     $('rate-error').textContent = '';
@@ -82,12 +151,53 @@ if (typeof document !== 'undefined') {
     $('unit').textContent = names[currency];
     $('rate-label').textContent = basisFor(currency) + names[currency] + ' 환율 (원)';
     $('manual-rate').value = rates[currency] || '';
+    showRateStatus();
     calculate();
+  }
+  async function refreshRates() {
+    if (pendingRefresh) return pendingRefresh;
+    pendingRefresh = (async () => {
+      try {
+        const response = await fetch(RATE_API, {cache:'no-store'});
+        if (!response.ok) throw new Error('환율 서버 응답 오류');
+        const received = exchangeRatesFromApi(await response.json());
+        fetchFailed = false;
+        for (const [code, item] of Object.entries(received)) {
+          if (!manualOverrides.has(code)) rates[code] = item.value;
+          rateMeta[code] = {date:item.date};
+        }
+        try {localStorage.setItem('easyExchangeRates', JSON.stringify(received));} catch {}
+        lastRefreshDay = kstDate();
+        $('manual-rate').value = rates[$('currency').value] || '';
+        showRateStatus();
+        calculate();
+      } catch (error) {
+        fetchFailed = true;
+        showRateStatus();
+      } finally {
+        pendingRefresh = null;
+      }
+    })();
+    return pendingRefresh;
+  }
+  function scheduleMidnight() {
+    clearTimeout(midnightTimer);
+    midnightTimer = setTimeout(() => {
+      manualOverrides.clear();
+      refreshRates().finally(scheduleMidnight);
+    }, untilKstMidnight() + 1000);
+  }
+  function refreshIfNewDay() {
+    if (lastRefreshDay !== kstDate()) {
+      manualOverrides.clear();
+      refreshRates();
+      scheduleMidnight();
+    }
   }
   $('amount').addEventListener('input', calculate);
   $('amount').addEventListener('blur', () => {try {const n=parseAmount($('amount').value); if(n!==null) $('amount').value=n.toLocaleString('en-US',{maximumFractionDigits:2});}catch{} });
   $('currency').addEventListener('change', changeCurrency);
-  $('manual-rate').addEventListener('input', () => {rates[$('currency').value]=$('manual-rate').value;calculate();});
+  $('manual-rate').addEventListener('input', () => {rates[$('currency').value]=$('manual-rate').value;manualOverrides.add($('currency').value);showRateStatus();calculate();});
   $('reset').addEventListener('click', () => {
     $('amount').value='';
     calculate();
@@ -96,5 +206,10 @@ if (typeof document !== 'undefined') {
   document.querySelectorAll('[data-add]').forEach(button => button.addEventListener('click', () => {
     try {const value=(parseAmount($('amount').value) || 0)+Number(button.dataset.add); parseAmount(String(value));$('amount').value=value.toLocaleString('en-US',{maximumFractionDigits:2});calculate();}catch(e){$('input-error').textContent=e.message;}
   }));
+  loadCachedRates();
   changeCurrency();
+  refreshRates();
+  scheduleMidnight();
+  document.addEventListener('visibilitychange', () => {if (!document.hidden) refreshIfNewDay();});
+  window.addEventListener('pageshow', refreshIfNewDay);
 }
