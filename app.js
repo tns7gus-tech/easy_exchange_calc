@@ -35,7 +35,7 @@ function simpleRate(value) {
 function convert(amount, rawRate, basis = 1) {
   return Math.round(amount * simpleRate(rawRate) / basis);
 }
-const CURRENCIES = ['EUR','USD','JPY','TRY','CNY','GBP','VND','THB','TWD','HKD','SGD','AUD','CAD','CHF','PHP'];
+const CURRENCIES = ['EUR','TRY'];
 const RATE_API = 'https://api.frankfurter.dev/v2/rates?base=EUR&quotes=' + ['KRW', ...CURRENCIES.filter(code => code !== 'EUR')].join(',');
 function kstDate(now = Date.now()) {
   return new Date(now + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
@@ -69,8 +69,8 @@ function exchangeRatesFromApi(rows) {
 if (typeof module !== 'undefined') module.exports = {koreanWon, parseAmount, simpleRate, convert, kstDate, untilKstMidnight, exchangeRatesFromApi};
 if (typeof document !== 'undefined') {
   const $ = id => document.getElementById(id);
-  const names = {EUR:'유로',USD:'달러',JPY:'엔',TRY:'리라',CNY:'위안',GBP:'파운드',VND:'동',THB:'바트',TWD:'달러',HKD:'달러',SGD:'달러',AUD:'달러',CAD:'달러',CHF:'프랑',PHP:'페소'};
-  const rates = {EUR:'1555.99',USD:'1366.70',JPY:'863.44',TRY:'27.98'};
+  const names = {EUR:'유로',TRY:'리라'};
+  const rates = {EUR:'1555.99',TRY:'27.98'};
   const rateMeta = {};
   const manualOverrides = new Set();
   let lastRefreshDay = '';
@@ -203,6 +203,8 @@ if (typeof document !== 'undefined') {
     calculate();
     $('amount').focus();
   });
+  $('rate-definition-open').addEventListener('click', () => $('rate-definition').showModal());
+  $('rate-definition-close').addEventListener('click', () => $('rate-definition').close());
   document.querySelectorAll('[data-add]').forEach(button => button.addEventListener('click', () => {
     try {const value=(parseAmount($('amount').value) || 0)+Number(button.dataset.add); parseAmount(String(value));$('amount').value=value.toLocaleString('en-US',{maximumFractionDigits:2});calculate();}catch(e){$('input-error').textContent=e.message;}
   }));
