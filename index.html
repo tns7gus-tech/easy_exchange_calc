@@ -16,20 +16,17 @@
     <div class="entry">
       <label for="currency">어느 나라 돈인가요?</label>
       <select id="currency">
-        <option value="EUR">유럽 · 유로 EUR</option><option value="USD">미국 · 달러 USD</option><option value="JPY">일본 · 엔 JPY</option><option value="TRY">튀르키예 · 리라 TRY</option><option value="CNY">중국 · 위안 CNY</option><option value="GBP">영국 · 파운드 GBP</option><option value="VND">베트남 · 동 VND</option><option value="THB">태국 · 바트 THB</option><option value="TWD">대만 · 달러 TWD</option><option value="HKD">홍콩 · 달러 HKD</option><option value="SGD">싱가포르 · 달러 SGD</option><option value="AUD">호주 · 달러 AUD</option><option value="CAD">캐나다 · 달러 CAD</option><option value="CHF">스위스 · 프랑 CHF</option><option value="PHP">필리핀 · 페소 PHP</option>
+        <option value="EUR">유로</option><option value="TRY">리라</option>
       </select>
       <div class="rate-editor">
         <label for="manual-rate" id="rate-label">1유로 환율 (원)</label>
-        <input id="manual-rate" type="text" inputmode="decimal" value="1555.99" autocomplete="off" aria-describedby="rate-help rate-error">
-        <p id="rate-status" role="status">최신 환율을 확인하는 중입니다.</p>
-        <p id="rate-help">알고 계신 환율을 입력해 주세요.</p>
+        <input id="manual-rate" type="text" inputmode="decimal" value="1555.99" autocomplete="off" aria-describedby="rate-error">
         <p id="rate-error" class="error" role="alert"></p>
-        <p id="applied-rate" role="status"></p>
       </div>
       <div class="amount-label"><label for="amount">금액을 입력하세요</label></div>
       <div class="amount-wrap"><input id="amount" type="text" inputmode="decimal" value="" placeholder="0" autocomplete="off" spellcheck="false" aria-describedby="input-error"><span id="unit">유로</span></div>
       <p id="input-error" class="error" role="alert"></p>
-      <div class="increments" aria-label="금액 더하기"><button type="button" data-add="10">+10</button><button type="button" data-add="100">+100</button><button type="button" data-add="1000">+1,000</button></div>
+      <div class="increments" aria-label="금액 더하기"><button type="button" data-add="1">+1</button><button type="button" data-add="10">+10</button><button type="button" data-add="100">+100</button><button type="button" data-add="1000">+1,000</button></div>
     </div>
     <div class="result-panel" aria-live="polite" aria-atomic="true">
       <div class="result-label">한국 돈으로</div>
@@ -40,6 +37,15 @@
   </section>
   <button type="button" id="reset" class="reset-button">다시 계산하기</button>
   <p class="reset-help">금액과 결과를 지워요. 선택한 통화와 환율은 유지돼요.</p>
-  <footer>접속할 때와 한국시간 매일 00:00에 <a href="https://frankfurter.dev/" target="_blank" rel="noopener noreferrer">Frankfurter</a>의 최신 공개 환율을 확인해요. 제공처의 자료 기준일은 화면에 표시됩니다.<br>환율 조회에 실패하면 예시값이나 이전에 표시된 값을 사용할 수 있으니 기준일을 확인해 주세요.<br>입력한 환율을 올림해서 계산하며, 실제 환전 금액은 은행 환율과 수수료에 따라 달라질 수 있어요.</footer>
+  <button type="button" id="rate-definition-open" class="definition-button" aria-haspopup="dialog" aria-controls="rate-definition">환율가격설정 정의</button>
+  <dialog id="rate-definition" aria-labelledby="rate-definition-title">
+    <div class="dialog-heading"><h2 id="rate-definition-title">환율가격설정 정의</h2><button type="button" id="rate-definition-close" aria-label="닫기">×</button></div>
+    <p id="rate-status" role="status">최신 환율을 확인하는 중입니다.</p>
+    <p id="rate-help">알고 계신 환율을 입력해 주세요.</p>
+    <p id="applied-rate" role="status"></p>
+    <p>접속할 때와 한국시간 매일 00:00에 <a href="https://frankfurter.dev/" target="_blank" rel="noopener noreferrer">Frankfurter</a>의 최신 공개 환율을 확인해요. 제공처의 자료 기준일은 위에 표시됩니다.</p>
+    <p>환율 조회에 실패하면 예시값이나 이전에 표시된 값을 사용할 수 있으니 기준일을 확인해 주세요.</p>
+    <p>입력한 환율을 올림해서 계산하며, 실제 환전 금액은 은행 환율과 수수료에 따라 달라질 수 있어요.</p>
+  </dialog>
 </main>
 </body></html>
